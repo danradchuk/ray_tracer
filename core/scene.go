@@ -112,76 +112,74 @@ func (s *Scene) castRay(ray geometry.Ray, depth int) shading.Color {
 		return s.Background
 	}
 
-	var closestT = math.Inf(1)
-	var closestPrimitive interface{}
+	var closestT float64
+	var closestPrimitive geometry.Primitive
 
 	hitRecord := s.AccelBVH.Intersect(ray)
-	if hitRecord != nil {
-		closestT = hitRecord.T
-		closestPrimitive = hitRecord.Primitive
+	if hitRecord == nil {
+		return s.Background
 	}
+
+	closestT = hitRecord.T
+	closestPrimitive = hitRecord.Primitive
 
 	// Phong Illumination Model
-	if primitive, ok := closestPrimitive.(geometry.Primitive); ok {
-		hitPoint := ray.At(closestT)
-		hitNormal := hitRecord.Normal
+	hitPoint := ray.At(closestT)
+	hitNormal := hitRecord.Normal
 
-		viewDir := s.Camera.Sub(hitPoint).Normalize() // vector from the eye to the hitPoint
-		lightDistance := s.Light.Pos.Sub(hitPoint).Norm()
-		lightDir := s.Light.Pos.Sub(hitPoint).Normalize()
+	viewDir := s.Camera.Sub(hitPoint).Normalize() // vector from the eye to the hitPoint
+	lightDistance := s.Light.Pos.Sub(hitPoint).Norm()
+	lightDir := s.Light.Pos.Sub(hitPoint).Normalize()
 
-		m := hitRecord.Material
+	m := hitRecord.Material
 
-		// 1. compute the reflection component
-		var reflective shading.Color
+	// 1. compute the reflection component
+	var reflective shading.Color
 
-		var reflectionDir = reflect(ray.Direction.Normalize(), hitNormal).Normalize()
-		var reflectionRayOrig geometry.Vec3
-		// avoid self-reflecting
-		if hitNormal.Dot(reflectionDir) < .0 {
-			reflectionRayOrig = hitPoint.Sub(hitNormal.Scale(Bias))
-		} else {
-			reflectionRayOrig = hitPoint.Add(hitNormal.Scale(Bias))
-		}
-		reflectionRay := geometry.NewSecondaryRay(reflectionRayOrig, reflectionDir)
-		reflective = s.castRay(reflectionRay, depth+1).Mul(m.KReflection)
+	var reflectionDir = reflect(ray.Direction.Normalize(), hitNormal).Normalize()
+	var reflectionRayOrig geometry.Vec3
+	// avoid self-reflecting
+	if hitNormal.Dot(reflectionDir) < .0 {
+		reflectionRayOrig = hitPoint.Sub(hitNormal.Scale(Bias))
+	} else {
+		reflectionRayOrig = hitPoint.Add(hitNormal.Scale(Bias))
+	}
+	reflectionRay := geometry.NewSecondaryRay(reflectionRayOrig, reflectionDir)
+	reflective = s.castRay(reflectionRay, depth+1).Mul(m.KReflection)
 
-		// 2. compute the shadow component
-		shadowIntensity := 1.
-		var shadowRayOrig geometry.Vec3
-		// avoid self-shadowing
-		if hitNormal.Dot(lightDir) < .0 {
-			shadowRayOrig = hitPoint.Sub(hitNormal.Scale(Bias))
-		} else {
-			shadowRayOrig = hitPoint.Add(hitNormal.Scale(Bias))
-		}
-		shadowRay := geometry.NewSecondaryRay(shadowRayOrig, lightDir)
-		for _, obj := range s.Objects {
-			if obj != primitive {
-				hitRecord := obj.Intersect(shadowRay)
-				if hitRecord != nil && hitRecord.T > .0 && hitRecord.T < lightDistance {
-					shadowIntensity = .0
-					break
-				}
+	// 2. compute the shadow component
+	shadowIntensity := 1.
+	var shadowRayOrig geometry.Vec3
+	// avoid self-shadowing
+	if hitNormal.Dot(lightDir) < .0 {
+		shadowRayOrig = hitPoint.Sub(hitNormal.Scale(Bias))
+	} else {
+		shadowRayOrig = hitPoint.Add(hitNormal.Scale(Bias))
+	}
+	shadowRay := geometry.NewSecondaryRay(shadowRayOrig, lightDir)
+	for _, obj := range s.Objects {
+		if obj != closestPrimitive {
+			hitRecord := obj.Intersect(shadowRay)
+			if hitRecord != nil && hitRecord.T > .0 && hitRecord.T < lightDistance {
+				shadowIntensity = .0
+				break
 			}
 		}
-		// hitRecord := scene.AccelBVH.Intersect(shadowRay)
-		// if hitRecord != nil && hitRecord.T > .0 && hitRecord.T < lightDistance {
-		// 	shadowIntensity = .0
-		// }
-
-		// 3. compute diffuse, specular, and ambient components
-		dot := hitNormal.Dot(lightDir) // when dot < .0 then an object points away from the light
-		r := hitNormal.Scale(2 * math.Max(.0, dot)).Sub(lightDir)
-
-		ambient := s.AmbientIntensity.Mul(m.KAmbient)
-		diffuse := s.Light.DiffuseIntensity.Mul(m.KDiffuse).MulByNum(math.Max(.0, dot)).MulByNum(shadowIntensity)
-		specular := s.Light.SpecularIntensity.Mul(m.KSpecular).MulByNum(math.Pow(math.Max(.0, viewDir.Dot(r)), m.Alpha)).MulByNum(shadowIntensity)
-
-		return ambient.Add(diffuse).Add(specular).Add(reflective)
 	}
+	// hitRecord := scene.AccelBVH.Intersect(shadowRay)
+	// if hitRecord != nil && hitRecord.T > .0 && hitRecord.T < lightDistance {
+	// 	shadowIntensity = .0
+	// }
 
-	return s.Background
+	// 3. compute diffuse, specular, and ambient components
+	dot := hitNormal.Dot(lightDir) // when dot < .0 then an object points away from the light
+	r := hitNormal.Scale(2 * math.Max(.0, dot)).Sub(lightDir)
+
+	ambient := s.AmbientIntensity.Mul(m.KAmbient)
+	diffuse := s.Light.DiffuseIntensity.Mul(m.KDiffuse).MulByNum(math.Max(.0, dot)).MulByNum(shadowIntensity)
+	specular := s.Light.SpecularIntensity.Mul(m.KSpecular).MulByNum(math.Pow(math.Max(.0, viewDir.Dot(r)), m.Alpha)).MulByNum(shadowIntensity)
+
+	return ambient.Add(diffuse).Add(specular).Add(reflective)
 }
 
 func createFrameBuffer(w, h int) [][]shading.ImageColor {
