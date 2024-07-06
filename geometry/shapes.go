@@ -8,7 +8,7 @@ import (
 
 type Primitive interface {
 	Intersect(r Ray) *HitRecord
-	BBox() Bounds3
+	Bounds() Bounds3
 	Centroid() Point3
 }
 
@@ -168,7 +168,7 @@ func (t *Triangle) Intersect(r Ray) *HitRecord {
 	return nil
 }
 
-func (t *Triangle) BBox() Bounds3 {
+func (t *Triangle) Bounds() Bounds3 {
 	xmin := min(t.V0.X, t.V1.X, t.V2.X)
 	xmax := max(t.V0.X, t.V1.X, t.V2.X)
 
@@ -185,6 +185,6 @@ func (t *Triangle) BBox() Bounds3 {
 }
 
 func (t *Triangle) Centroid() Point3 {
-	bbox := t.BBox()
+	bbox := t.Bounds()
 	return bbox.Pmin.Scale(.5).Add(bbox.Pmax.Scale(.5))
 }

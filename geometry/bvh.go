@@ -1,9 +1,5 @@
 package geometry
 
-import (
-	"github.com/danradchuk/raytracer/shading"
-)
-
 type BVHNode struct {
 	Left  Primitive
 	Box   Bounds3
@@ -28,17 +24,17 @@ func BuildBVH(objects []Primitive) *BVHNode {
 		// leaf node case
 		left = objects[0]
 		right = nil
-		bbox = left.BBox()
+		bbox = left.Bounds()
 	} else if n == 2 {
 		left = objects[0]
 		right = objects[1]
-		bbox = left.BBox().Union(right.BBox())
+		bbox = left.Bounds().Union(right.Bounds())
 	} else {
 		// interior node case
 
 		// 1. compute a compound bounds of all primitives in objects
 		for _, o := range objects {
-			bbox = bbox.Union(o.BBox())
+			bbox = bbox.Union(o.Bounds())
 		}
 
 		// 2. calculate bounds for the centroids and pick the longest axis
@@ -118,8 +114,7 @@ func (n *BVHNode) Intersect(r Ray) *HitRecord {
 	return hit
 }
 
-
-func (n *BVHNode) BBox() Bounds3 {
+func (n *BVHNode) Bounds() Bounds3 {
 	return n.Box
 }
 
