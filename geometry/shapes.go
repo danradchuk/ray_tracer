@@ -9,7 +9,6 @@ import (
 type Primitive interface {
 	Intersect(r Ray) *HitRecord
 	Bounds() Bounds3
-	Centroid() Point3
 }
 
 type HitRecord struct {
@@ -182,9 +181,4 @@ func (t *Triangle) Bounds() Bounds3 {
 		Pmin: Point3{X: xmin, Y: ymin, Z: zmin},
 		Pmax: Point3{X: xmax, Y: ymax, Z: zmax},
 	}
-}
-
-func (t *Triangle) Centroid() Point3 {
-	bbox := t.Bounds()
-	return bbox.Pmin.Scale(.5).Add(bbox.Pmax.Scale(.5))
 }

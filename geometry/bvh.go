@@ -13,8 +13,8 @@ type BVHNode struct {
 // 4. Split a slice of Primitives by the midpoint
 // 5. Recursively build a BVH
 
-func BuildBVH(objects []Primitive) *BVHNode {
-	n := len(objects)
+func BuildBVH(prims []Primitive) *BVHNode {
+	n := len(prims)
 
 	var left Primitive
 	var right Primitive
@@ -22,25 +22,25 @@ func BuildBVH(objects []Primitive) *BVHNode {
 
 	if n == 1 {
 		// leaf node case
-		left = objects[0]
+		left = prims[0]
 		right = nil
 		bbox = left.Bounds()
 	} else if n == 2 {
-		left = objects[0]
-		right = objects[1]
+		left = prims[0]
+		right = prims[1]
 		bbox = left.Bounds().Union(right.Bounds())
 	} else {
 		// interior node case
 
-		// 1. compute a compound bounds of all primitives in objects
-		for _, o := range objects {
+		// 1. compute a compound bounds of all primitives
+		for _, o := range prims {
 			bbox = bbox.Union(o.Bounds())
 		}
 
 		// 2. calculate bounds for the centroids and pick the longest axis
 		var centroidBounds = EmptyAABB()
-		for _, o := range objects {
-			centroidBounds = centroidBounds.UnionPoint3(o.Centroid())
+		for _, p := range prims {
+			centroidBounds = centroidBounds.UnionPoint3(centroid(p))
 		}
 		axis := centroidBounds.LongestAxis()
 
@@ -49,16 +49,16 @@ func BuildBVH(objects []Primitive) *BVHNode {
 		mPoint := (c1 + c2) / 2
 
 		// 4. divide set of primitives into two equal parts such that coordinate of a centroid < pMid goes to the first half, and other goes to the other
-		mid := partition(objects, func(p Primitive) bool {
-			return p.Centroid().GetCoordinateByAxis(axis) < mPoint
+		mid := partition(prims, func(p Primitive) bool {
+			return centroid(p).GetCoordinateByAxis(axis) < mPoint
 		})
 
 		if mid == n {
 			mid = n / 2
 		}
 
-		left = BuildBVH(objects[0:mid])
-		right = BuildBVH(objects[mid:n])
+		left = BuildBVH(prims[0:mid])
+		right = BuildBVH(prims[mid:n])
 	}
 
 	return &BVHNode{
@@ -118,6 +118,7 @@ func (n *BVHNode) Bounds() Bounds3 {
 	return n.Box
 }
 
-func (n *BVHNode) Centroid() Point3 {
-	return Point3{}
+func centroid(p Primitive) Point3 {
+	primBounds := p.Bounds()
+	return primBounds.Pmin.Scale(.5).Add(primBounds.Pmax.Scale(.5))
 }

@@ -42,7 +42,7 @@ type Scene struct {
 	AmbientIntensity shading.Color
 	Camera           geometry.Vec3
 	ViewPort         geometry.Vec3
-	Objects          []geometry.Primitive
+	Primitives       []geometry.Primitive
 	AccelBVH         *geometry.BVHNode
 }
 
@@ -157,7 +157,7 @@ func (s *Scene) castRay(ray geometry.Ray, depth int) shading.Color {
 		shadowRayOrig = hitPoint.Add(hitNormal.Scale(Bias))
 	}
 	shadowRay := geometry.NewSecondaryRay(shadowRayOrig, lightDir)
-	for _, obj := range s.Objects {
+	for _, obj := range s.Primitives {
 		if obj != closestPrimitive {
 			hitRecord := obj.Intersect(shadowRay)
 			if hitRecord != nil && hitRecord.T > .0 && hitRecord.T < lightDistance {
@@ -172,7 +172,7 @@ func (s *Scene) castRay(ray geometry.Ray, depth int) shading.Color {
 	// }
 
 	// 3. compute diffuse, specular, and ambient components
-	dot := hitNormal.Dot(lightDir) // when dot < .0 then an object points away from the light
+	dot := hitNormal.Dot(lightDir) // when dot < .0 then a primitive points away from the light
 	r := hitNormal.Scale(2 * math.Max(.0, dot)).Sub(lightDir)
 
 	ambient := s.AmbientIntensity.Mul(m.KAmbient)

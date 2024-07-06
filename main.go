@@ -39,7 +39,7 @@ func main() {
 			DiffuseIntensity:  shading.Color{R: 0.8, G: 0.8, B: 0.8},
 			SpecularIntensity: shading.Color{R: 0.8, G: 0.8, B: 0.8},
 		},
-		Objects: []geometry.Primitive{
+		Primitives: []geometry.Primitive{
 			/* &geometry.Sphere{
 				Center:   geometry.Vec3{X: 0., Y: 0., Z: 25},
 				R:        R,
@@ -78,11 +78,11 @@ func main() {
 	// load a triangle mesh
 	mesh := geometry.LoadOBJ("teapot.obj")
 	for _, t := range mesh.GetTrianglesFromMesh(shading.RedRubber) {
-		s.Objects = append(s.Objects, t)
+		s.Primitives = append(s.Primitives, t)
 	}
 
 	// build a BVH
-	s.AccelBVH = geometry.BuildBVH(s.Objects)
+	s.AccelBVH = geometry.BuildBVH(s.Primitives)
 
 	// render image
 	err = s.CreatePPM(width, height)
