@@ -89,10 +89,6 @@ func partition(slice []Primitive, predicate func(Primitive) bool) int {
 	return i
 }
 
-func (n *BVHNode) GetMaterial() shading.Material {
-	return shading.Material{}
-}
-
 func (n *BVHNode) Intersect(r Ray) *HitRecord {
 	var hit *HitRecord = nil
 	if n.Box.Intersect(r) {
@@ -122,9 +118,6 @@ func (n *BVHNode) Intersect(r Ray) *HitRecord {
 	return hit
 }
 
-func (n *BVHNode) NormalAt(_ Vec3) Vec3 {
-	return Vec3{}
-}
 
 func (n *BVHNode) BBox() Bounds3 {
 	return n.Box

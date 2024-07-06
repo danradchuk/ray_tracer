@@ -124,12 +124,13 @@ func (s *Scene) castRay(ray geometry.Ray, depth int) shading.Color {
 	// Phong Illumination Model
 	if primitive, ok := closestPrimitive.(geometry.Primitive); ok {
 		hitPoint := ray.At(closestT)
-		hitNormal := primitive.NormalAt(hitPoint)
+		hitNormal := hitRecord.Normal
+
 		viewDir := s.Camera.Sub(hitPoint).Normalize() // vector from the eye to the hitPoint
 		lightDistance := s.Light.Pos.Sub(hitPoint).Norm()
 		lightDir := s.Light.Pos.Sub(hitPoint).Normalize()
 
-		m := primitive.GetMaterial()
+		m := hitRecord.Material
 
 		// 1. compute the reflection component
 		var reflective shading.Color

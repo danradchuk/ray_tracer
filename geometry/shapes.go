@@ -7,9 +7,7 @@ import (
 )
 
 type Primitive interface {
-	GetMaterial() shading.Material
 	Intersect(r Ray) *HitRecord
-	NormalAt(p Vec3) Vec3
 	BBox() Bounds3
 	Centroid() Point3
 }
@@ -17,6 +15,8 @@ type Primitive interface {
 type HitRecord struct {
 	T         float64
 	Primitive Primitive
+	Material  shading.Material
+	Normal    Vec3
 }
 
 // Sphere
@@ -155,18 +155,17 @@ func (t *Triangle) Intersect(r Ray) *HitRecord {
 
 	// Compute intersection distance
 	tr := invDet * edge2.Dot(q)
+
+	// calculate a normal
+	a := t.V1.Sub(t.V0)
+	b := t.V2.Sub(t.V0)
+	n := a.Cross(b).Normalize()
+
 	if tr > epsilon {
-		return &HitRecord{tr, t}
+		return &HitRecord{tr, t, t.Material, n}
 	}
 
 	return nil
-}
-
-func (t *Triangle) NormalAt(_ Vec3) Vec3 {
-	a := t.V1.Sub(t.V0)
-	b := t.V2.Sub(t.V0)
-
-	return a.Cross(b).Normalize()
 }
 
 func (t *Triangle) BBox() Bounds3 {
