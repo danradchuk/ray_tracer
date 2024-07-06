@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"os"
 	"runtime"
 	"runtime/pprof"
@@ -15,17 +16,20 @@ const height = 768
 const R = 15
 
 func main() {
+	// cpu profile
 	file, _ := os.Create("./cpu.pprof")
 	err := pprof.StartCPUProfile(file)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	defer pprof.StopCPUProfile()
 
+	// memory profile
 	memProf, _ := os.Create("./mem.pprof")
 	defer pprof.Lookup("allocs").WriteTo(memProf, 0)
 	defer runtime.GC()
 
+	// construct the scene
 	s := core.Scene{
 		Background:       shading.Color{R: 0.1, G: 0.3, B: 0.3},
 		Camera:           geometry.Vec3{X: 0., Y: 0., Z: -10.},
@@ -35,7 +39,7 @@ func main() {
 			DiffuseIntensity:  shading.Color{R: 0.8, G: 0.8, B: 0.8},
 			SpecularIntensity: shading.Color{R: 0.8, G: 0.8, B: 0.8},
 		},
-		Objects: []core.SceneObject{
+		Objects: []geometry.Primitive{
 			/* &geometry.Sphere{
 				Center:   geometry.Vec3{X: 0., Y: 0., Z: 25},
 				R:        R,
@@ -71,15 +75,18 @@ func main() {
 		},
 	}
 
-	// load triangle mesh
-	m := geometry.LoadOBJ("teapot.obj")
-	for _, t := range m.GetTrianglesFromMesh(shading.RedRubber) {
+	// load a triangle mesh
+	mesh := geometry.LoadOBJ("teapot.obj")
+	for _, t := range mesh.GetTrianglesFromMesh(shading.RedRubber) {
 		s.Objects = append(s.Objects, t)
 	}
 
-	// render
+	// build a BVH
+	s.AccelBVH = geometry.BuildBVH(s.Objects)
+
+	// render image
 	err = s.CreatePPM(width, height)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 }

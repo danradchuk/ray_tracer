@@ -50,13 +50,13 @@ func (v Vec3) Norm() float64 {
 
 func (v Vec3) Normalize() Vec3 {
 	norm := v.Norm()
-	return Vec3{
-		v.X / norm,
-		v.Y / norm,
-		v.Z / norm,
-	}
+	return Vec3{v.X / norm, v.Y / norm, v.Z / norm}
 }
 
 func (v Vec3) Lerp(u Vec3, t float64) Vec3 {
 	return v.Scale(1 - t).Add(u.Scale(t))
+}
+
+func (v Vec3) Inverse() Vec3 {
+	return Vec3{1 / v.X, 1 / v.Y, 1 / v.Z}
 }
