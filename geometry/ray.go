@@ -4,16 +4,18 @@ import (
 	"math"
 )
 
-const Fov = 1.04666667
-
+// Ray represents a ray with an origin and direction in 3D space.
 type Ray struct {
 	Origin    Vec3
 	Direction Vec3
 }
 
-func NewPrimaryRay(camera Vec3, width, height float64, x, y float64) Ray {
+// NewPrimaryRay creates a primary (camera) ray from the camera for a given screen position (x, y)
+// with the specified field of view (fov).
+func NewPrimaryRay(camera Vec3, width, height float64, x, y float64, fov int) Ray {
 	aspectRatio := width / height
-	angle := math.Tan(Fov * 0.5)
+	fovRad := (float64(fov) * math.Pi) / 180
+	angle := math.Tan(fovRad * 0.5)
 
 	// camera space coordinates
 	viewX := (2.*((x+.5)/width) - 1) * angle * aspectRatio
@@ -37,6 +39,7 @@ func NewPrimaryRay(camera Vec3, width, height float64, x, y float64) Ray {
 	}
 }
 
+// NewSecondaryRay creates a secondary (shadow) ray with a given origin and direction.
 func NewSecondaryRay(o Vec3, d Vec3) Ray {
 	return Ray{
 		Origin:    o,
@@ -44,6 +47,7 @@ func NewSecondaryRay(o Vec3, d Vec3) Ray {
 	}
 }
 
+// At calculates the position of the ray at distance t.
 func (r Ray) At(t float64) Vec3 {
 	return r.Origin.Add(r.Direction.Scale(t))
 }

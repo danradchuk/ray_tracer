@@ -1,18 +1,20 @@
 package geometry
 
+// BVHNode represents a node in Bounding Volume Hierarchy.
+// Note that BVHNode is a Primitive itself,
+// so we don't have to distinguish interior and leaf nodes.
 type BVHNode struct {
 	Left  Primitive
 	Box   Bounds3
 	Right Primitive
 }
 
-// To construct a BVH we need
-// 1. Compute a AABB for every triangle of the mesh
+// BuildBVH constructs a Bounding Volume Hierarchy. To construct a BVH we need
+// 1. Compute an Axis-Aligned Bounding Box (AABB) for every triangle of the mesh
 // 2. Compute a centroid of the AABB
 // 3. Compute a midpoint of the centroids
 // 4. Split a slice of Primitives by the midpoint
 // 5. Recursively build a BVH
-
 func BuildBVH(prims []Primitive) *BVHNode {
 	n := len(prims)
 
@@ -25,12 +27,11 @@ func BuildBVH(prims []Primitive) *BVHNode {
 		left = prims[0]
 		right = nil
 		bbox = left.Bounds()
-	} else if n == 2 {
+	} else if n == 2 { // leaf node case
 		left = prims[0]
 		right = prims[1]
 		bbox = left.Bounds().Union(right.Bounds())
-	} else {
-		// interior node case
+	} else { // interior node case
 
 		// 1. compute a compound bounds of all primitives
 		for _, o := range prims {
@@ -48,7 +49,8 @@ func BuildBVH(prims []Primitive) *BVHNode {
 		c1, c2 := centroidBounds.GetCoordinatesByAxis(axis)
 		mPoint := (c1 + c2) / 2
 
-		// 4. divide set of primitives into two equal parts such that coordinate of a centroid < pMid goes to the first half, and other goes to the other
+		// 4. divide set of primitives into two equal parts such that coordinate
+		// of a centroid < pMid goes to the first half, and other goes to the other
 		mid := partition(prims, func(p Primitive) bool {
 			return centroid(p).GetCoordinateByAxis(axis) < mPoint
 		})
@@ -68,23 +70,7 @@ func BuildBVH(prims []Primitive) *BVHNode {
 	}
 }
 
-func partition(slice []Primitive, predicate func(Primitive) bool) int {
-	i := 0
-	j := len(slice) - 1
-	for i < j {
-		for i < len(slice) && predicate(slice[i]) {
-			i++
-		}
-		for j >= 0 && !predicate(slice[j]) {
-			j--
-		}
-		if i < j {
-			slice[i], slice[j] = slice[j], slice[i]
-		}
-	}
-	return i
-}
-
+// Intersect search (recursively) intersection of the ray r with a Primitive.
 func (n *BVHNode) Intersect(r Ray) *HitRecord {
 	var hit *HitRecord = nil
 	if n.Box.Intersect(r) {
@@ -120,5 +106,22 @@ func (n *BVHNode) Bounds() Bounds3 {
 
 func centroid(p Primitive) Point3 {
 	primBounds := p.Bounds()
-	return primBounds.Pmin.Scale(.5).Add(primBounds.Pmax.Scale(.5))
+	return primBounds.PMin.Scale(.5).Add(primBounds.PMax.Scale(.5))
+}
+
+func partition(slice []Primitive, predicate func(Primitive) bool) int {
+	i := 0
+	j := len(slice) - 1
+	for i < j {
+		for i < len(slice) && predicate(slice[i]) {
+			i++
+		}
+		for j >= 0 && !predicate(slice[j]) {
+			j--
+		}
+		if i < j {
+			slice[i], slice[j] = slice[j], slice[i]
+		}
+	}
+	return i
 }

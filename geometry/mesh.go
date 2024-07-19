@@ -9,16 +9,13 @@ import (
 	"github.com/danradchuk/raytracer/shading"
 )
 
-/*
-OBJ File Format:
-v 3228/1234/32 - a position of vertex ( {x: 3228, y: 1234, z: 32} )
-f 8/8/8 7/7/7 9/9/9 10/10/10  - a face (8,7,9,10)
-*/
+// IndexedMesh represents a mesh with vertices and their indices for triangles.
 type IndexedMesh struct {
 	TrianglesToIdxs [][]int
 	Verts           []Vec3
 }
 
+// LoadOBJ loads a mesh from an OBJ file and returns an IndexedMesh.
 func LoadOBJ(fName string) *IndexedMesh {
 	var tInd [][]int
 	var verts []Vec3
@@ -45,8 +42,8 @@ func LoadOBJ(fName string) *IndexedMesh {
 
 			verts = append(verts, Vec3{X: x, Y: y, Z: z})
 		case "f":
-			// compute all vertices for n-2 vertexes
-			// where n - number of all vertexes in the current row
+			// Compute all vertices for n-2 vertexes
+			// where n - number of all vertexes in the current row.
 			// a row in .obj file is - v 1/1/1 2/2/2/2 3/3/3/3 4/4/4/4
 			numVerts := len(fields[1:])
 			for i := 2; i <= numVerts-1; i++ {
@@ -86,6 +83,7 @@ func check(e error) {
 	}
 }
 
+// GetTrianglesFromMesh returns a slice of Triangles constructed from the mesh with the given material.
 func (m *IndexedMesh) GetTrianglesFromMesh(material shading.Material) []*Triangle {
 	var triangles []*Triangle
 	for _, mapping := range m.TrianglesToIdxs {

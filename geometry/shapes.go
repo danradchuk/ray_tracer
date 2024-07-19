@@ -6,11 +6,14 @@ import (
 	"github.com/danradchuk/raytracer/shading"
 )
 
+// Primitive represents an interface for 3D objects that can be intersected by rays
+// and have bounding boxes.
 type Primitive interface {
 	Intersect(r Ray) *HitRecord
 	Bounds() Bounds3
 }
 
+// HitRecord stores information about a ray-object intersection.
 type HitRecord struct {
 	T         float64
 	Primitive Primitive
@@ -18,13 +21,14 @@ type HitRecord struct {
 	Normal    Vec3
 }
 
-// Sphere
+// Sphere represents a sphere with a center, radius, and material.
 type Sphere struct {
 	Center   Vec3
 	R        float64
 	Material shading.Material
 }
 
+// Intersect computes the intersection of a ray with the sphere.
 func (s Sphere) Intersect(r Ray) *HitRecord {
 	co := r.Origin.Sub(s.Center)
 
@@ -47,6 +51,7 @@ func (s Sphere) Intersect(r Ray) *HitRecord {
 	return &HitRecord{tMin, s, s.Material, p.Sub(s.Center).Normalize()}
 }
 
+// Bounds returns the bounding box of the sphere.
 func (s Sphere) Bounds() Bounds3 {
 	center := s.Center
 	radius := s.R
@@ -57,7 +62,7 @@ func (s Sphere) Bounds() Bounds3 {
 	return Bounds3{pMin, pMax}
 }
 
-// Plane
+// Plane represents a plane with a point, normal vector, width, and material.
 type Plane struct {
 	Width    float64
 	Point    Vec3
@@ -65,6 +70,7 @@ type Plane struct {
 	Material shading.Material
 }
 
+// Intersect computes the intersection of a ray with the plane.
 func (p Plane) Intersect(r Ray) *HitRecord {
 	// t = ((p0 - l0) * n) / (l * n)
 	// p0 - point on the plane
@@ -97,6 +103,7 @@ func (p Plane) Intersect(r Ray) *HitRecord {
 	return nil
 }
 
+// Bounds returns the bounding box of the plane.
 func (p Plane) Bounds() Bounds3 {
 	halfWidth := p.Width / 2
 
@@ -132,12 +139,14 @@ func (p Plane) Bounds() Bounds3 {
 	return Bounds3{pMin, pMax}
 }
 
-// Triangle
+// Triangle represents a triangle with three vertices.
 type Triangle struct {
 	V0, V1, V2 Vec3
 	Material   shading.Material
 }
 
+// Intersect computes the intersection of a ray with the triangle.
+// It uses barycentric coordinates method.
 func (t *Triangle) Intersect(r Ray) *HitRecord {
 	epsilon := 0.000001
 
@@ -193,6 +202,7 @@ func (t *Triangle) Intersect(r Ray) *HitRecord {
 	return nil
 }
 
+// Bounds returns the bounding box of the triangle.
 func (t *Triangle) Bounds() Bounds3 {
 	xmin := min(t.V0.X, t.V1.X, t.V2.X)
 	xmax := max(t.V0.X, t.V1.X, t.V2.X)
@@ -204,7 +214,7 @@ func (t *Triangle) Bounds() Bounds3 {
 	zmax := max(t.V0.Z, t.V1.Z, t.V2.Z)
 
 	return Bounds3{
-		Pmin: Point3{X: xmin, Y: ymin, Z: zmin},
-		Pmax: Point3{X: xmax, Y: ymax, Z: zmax},
+		PMin: Point3{X: xmin, Y: ymin, Z: zmin},
+		PMax: Point3{X: xmax, Y: ymax, Z: zmax},
 	}
 }

@@ -23,6 +23,9 @@ var RedRubber = Material{
 	Alpha:       10.0,
 }
 
+// Material represents the properties of a material used in rendering.
+// It includes ambient, diffuse, specular, and reflection constants,
+// as well as an alpha value for the Phong model.
 type Material struct {
 	KAmbient    Color
 	KDiffuse    Color

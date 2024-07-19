@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"os"
 	"runtime"
@@ -11,23 +12,43 @@ import (
 	"github.com/danradchuk/raytracer/shading"
 )
 
-const width = 1366
-const height = 768
-const R = 15
+var (
+	cpuprofile = flag.String("cpuprofile", "", "write cpu profile to this file")
+	memprofile = flag.String("memprofile", "", "write memory profile to this file")
+)
 
 func main() {
-	// cpu profile
-	file, _ := os.Create("./cpu.pprof")
-	err := pprof.StartCPUProfile(file)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer pprof.StopCPUProfile()
+	var (
+		width  = flag.Int("width", 1366, "width of the picture in pixels")
+		height = flag.Int("height", 768, "height of the picture in pixels")
+		fov    = flag.Int("fov", 90, "field of view")
+		_      = flag.Int("radius", 15, "radius of a sphere")
+		input  = flag.String("input", "", "a mesh of an object to render")
+		output = flag.String("output", "image.ppm", "image to render")
+	)
 
-	// memory profile
-	memProf, _ := os.Create("./mem.pprof")
-	defer pprof.Lookup("allocs").WriteTo(memProf, 0)
-	defer runtime.GC()
+	flag.Parse()
+
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = pprof.StartCPUProfile(f)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer pprof.StopCPUProfile()
+	}
+
+	if *memprofile != "" {
+		f, err := os.Create(*memprofile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer pprof.Lookup("allocs").WriteTo(f, 0)
+		defer runtime.GC()
+	}
 
 	// construct the scene
 	s := core.Scene{
@@ -76,16 +97,18 @@ func main() {
 	}
 
 	// load a triangle mesh
-	mesh := geometry.LoadOBJ("teapot.obj")
-	for _, t := range mesh.GetTrianglesFromMesh(shading.RedRubber) {
-		s.Primitives = append(s.Primitives, t)
+	if *input != "" {
+		mesh := geometry.LoadOBJ(*input)
+		for _, t := range mesh.GetTrianglesFromMesh(shading.RedRubber) {
+			s.Primitives = append(s.Primitives, t)
+		}
 	}
 
 	// build a BVH
 	s.AccelBVH = geometry.BuildBVH(s.Primitives)
 
 	// render image
-	err = s.CreatePPM(width, height)
+	err := s.CreatePPM(*width, *height, *fov, *output)
 	if err != nil {
 		log.Fatal(err)
 	}

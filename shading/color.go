@@ -6,21 +6,21 @@ const Max = 1.0
 
 var Black = Color{0.0, 0.0, 0.0}
 
-// A 8-bit RGB representation of a color
+// An ImageColor represents a color in 8-bit RGB.
 type ImageColor struct {
 	R uint8
 	G uint8
 	B uint8
 }
 
-// A representation of a color where every
-// component is in the range [0.0, 1.0]
+// Color represents a color where every component is in the range [0.0, 1.0].
 type Color struct {
 	R float64
 	G float64
 	B float64
 }
 
+// Mul multiplies each component of the color by the corresponding component of another color.
 func (c Color) Mul(other Color) Color {
 	return Color{
 		R: c.R * other.R,
@@ -29,6 +29,7 @@ func (c Color) Mul(other Color) Color {
 	}
 }
 
+// MulByNum multiplies each component of the color by a scalar.
 func (c Color) MulByNum(s float64) Color {
 	return Color{
 		R: c.R * s,
@@ -37,6 +38,7 @@ func (c Color) MulByNum(s float64) Color {
 	}
 }
 
+// Add adds the corresponding components of two colors.
 func (c Color) Add(other Color) Color {
 	return Color{
 		R: c.R + other.R,
@@ -45,6 +47,7 @@ func (c Color) Add(other Color) Color {
 	}
 }
 
+// Clamped returns a color with each component clamped to the range [0.0, 1.0].
 func (c Color) Clamped() Color {
 	var r float64
 	var g float64
@@ -77,6 +80,7 @@ func (c Color) Clamped() Color {
 	return Color{r, g, b}
 }
 
+// ToImageColor converts the color to an ImageColor.
 func (c Color) ToImageColor() ImageColor {
 	return ImageColor{
 		uint8(c.R*255 + 0.5),
