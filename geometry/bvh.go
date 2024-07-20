@@ -100,6 +100,42 @@ func (n *BVHNode) Intersect(r Ray) *HitRecord {
 	return hit
 }
 
+// IntersectExclude search (recursively) intersection of the shadow ray r with a Primitive excluding p
+func (n *BVHNode) IntersectExclude(r Ray, p Primitive) *HitRecord {
+	var hit *HitRecord = nil
+	if n.Box.Intersect(r) {
+		var leftHit *HitRecord
+		var rightHit *HitRecord
+
+		if n.Left != nil {
+			leftHit = n.Left.Intersect(r)
+		}
+		if n.Right != nil {
+			rightHit = n.Right.Intersect(r)
+		}
+
+		if leftHit != nil && rightHit != nil {
+			if leftHit.T < rightHit.T {
+				hit = leftHit
+			} else {
+				hit = rightHit
+			}
+		} else if leftHit != nil {
+			hit = leftHit
+		} else if rightHit != nil {
+			hit = rightHit
+		}
+	}
+
+	if hit != nil {
+		if p == hit.Primitive {
+			return nil
+		}
+	}
+
+	return hit
+}
+
 func (n *BVHNode) Bounds() Bounds3 {
 	return n.Box
 }
