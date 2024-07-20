@@ -41,7 +41,6 @@ type Scene struct {
 	Lights           []*Light
 	AmbientIntensity shading.Color
 	Camera           geometry.Vec3
-	ViewPort         geometry.Vec3
 	Primitives       []geometry.Primitive
 	AccelBVH         *geometry.BVHNode
 }
