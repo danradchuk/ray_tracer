@@ -2,7 +2,6 @@ package dsl
 
 import (
 	"fmt"
-	"io"
 	"strconv"
 	"strings"
 
@@ -23,32 +22,30 @@ func NewParser(content string) *Parser {
 
 	p := &Parser{Words: tokens}
 	p.nextToken()
+	p.nextToken()
 
 	return p
 }
 
-func (p *Parser) nextToken() error {
+func (p *Parser) nextToken() {
 	if p.peekPos >= len(p.Words) {
-		return io.EOF
+		p.currToken = "EOF"
+	} else {
+		p.currToken = p.peekToken
 	}
-	p.currToken = p.peekToken
 	p.peekToken = p.Words[p.peekPos]
 	p.peekPos++
-
-	return nil
 }
 
 func (p *Parser) Parse() (*core.Scene, error) {
 	var scene = &core.Scene{}
-	for p.nextToken() != io.EOF {
+	for p.currToken != "EOF" {
 		switch p.currToken {
 		case "background":
 			tok := p.peekToken
 			if !strings.HasPrefix(tok, "#") && len(tok) != 7 && !isASCII(tok) {
 				return nil, fmt.Errorf("background: invalid color format: %s", tok)
 			}
-
-			p.nextToken() // consume hex number
 
 			red, err := strconv.ParseInt(tok[1:3], 16, 64)
 			if err != nil {
@@ -71,11 +68,13 @@ func (p *Parser) Parse() (*core.Scene, error) {
 				B: float64(blue) / 255.,
 			}
 			scene.Background = color
+			p.nextToken() // consume hex number
 		case "ambient":
 			c, err := parseColor(p.peekToken)
 			if err != nil {
 				return nil, err
 			}
+			p.nextToken()
 			scene.AmbientIntensity = *c
 		case "light":
 			tok := p.peekToken
@@ -116,6 +115,7 @@ func (p *Parser) Parse() (*core.Scene, error) {
 			if p.peekToken != "}" {
 				return nil, fmt.Errorf("unexpected character: %s", p.peekToken)
 			}
+			p.nextToken()
 			scene.Lights = append(scene.Lights, light)
 		case "camera":
 			eye, err := parseVec(p.peekToken)
@@ -162,6 +162,7 @@ func (p *Parser) Parse() (*core.Scene, error) {
 			if p.peekToken != "}" {
 				return nil, fmt.Errorf("unexpected character: %s", p.peekToken)
 			}
+			p.nextToken()
 			scene.Primitives = append(scene.Primitives, sphere)
 		case "triangle":
 			tok := p.peekToken
@@ -208,6 +209,7 @@ func (p *Parser) Parse() (*core.Scene, error) {
 			if p.peekToken != "}" {
 				return nil, fmt.Errorf("unexpected character: %s", p.peekToken)
 			}
+			p.nextToken()
 			scene.Primitives = append(scene.Primitives, triangle)
 		case "plane":
 			tok := p.peekToken
@@ -254,8 +256,11 @@ func (p *Parser) Parse() (*core.Scene, error) {
 			if p.peekToken != "}" {
 				return nil, fmt.Errorf("unexpected character: %s", p.peekToken)
 			}
+			p.nextToken()
 			scene.Primitives = append(scene.Primitives, plane)
 		}
+
+		p.nextToken()
 	}
 
 	return scene, nil
