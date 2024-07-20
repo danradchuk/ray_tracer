@@ -1,8 +1,6 @@
 package geometry
 
-import (
-	"math"
-)
+import "math"
 
 // Ray represents a ray with an origin and direction in 3D space.
 type Ray struct {
@@ -12,30 +10,30 @@ type Ray struct {
 
 // NewPrimaryRay creates a primary (camera) ray from the camera for a given screen position (x, y)
 // with the specified field of view (fov).
-func NewPrimaryRay(camera Vec3, width, height float64, x, y float64, fov int) Ray {
+func NewPrimaryRay(eye Vec3, width, height float64, x, y float64, fov int) Ray {
 	aspectRatio := width / height
 	fovRad := (float64(fov) * math.Pi) / 180
 	angle := math.Tan(fovRad * 0.5)
 
 	// camera space coordinates
-	viewX := (2.*((x+.5)/width) - 1) * angle * aspectRatio
-	viewY := (1 - 2.*((y+.5)/height)) * angle
-	viewZ := camera.Z + 1
+	alpha := (2.*((x+.5)/width) - 1) * angle * aspectRatio
+	beta := (1 - 2.*((y+.5)/height)) * angle
 
-	// lookFrom := Vec3{0., 0., 0.}
-	// lookAt := Vec3{0., 0., -1.} // our eye looks along positive z-axis
-	// up := Vec3{0., 1., 0.}
-	//
-	//    // u,v,w unit basis vectors
-	// w := lookFrom.Sub(lookAt).Normalize() // z-axis
-	// u := w.Cross(up).Normalize()          // x-axis
-	// v := u.Cross(w)                       // y-axis
-	//
-	// d := w.Scale(-1.)
+	// for left-handed coordinate system
+	lookAt := Vec3{0., 0., 1.}
+	up := Vec3{0., 1., 0.}
+
+	// u,v,w unit basis vectors
+	w := eye.Sub(lookAt).Normalize() // z-axis
+	u := w.Cross(up).Normalize()     // x-axis
+	v := u.Cross(w)                  // y-axis
+
+	// our eye looks along positive z-axis; since w looks along negative z-axis, then d looks along positive z-axis
+	d := u.Scale(alpha).Add(v.Scale(beta)).Sub(w).Normalize()
 
 	return Ray{
-		Origin:    camera,
-		Direction: Vec3{viewX, viewY, viewZ}.Sub(camera),
+		Origin:    eye,
+		Direction: d,
 	}
 }
 
