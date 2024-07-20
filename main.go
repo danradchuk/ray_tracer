@@ -24,7 +24,7 @@ func main() {
 		fov    = flag.Int("fov", 90, "field of view")
 		input  = flag.String("input", "teapot.obj", "a mesh of an object to render")
 		output = flag.String("output", "image.ppm", "image to render")
-		world  = flag.String("scene-file", "./scenes/empty_scene", "file for constructing the scene")
+		world  = flag.String("scene-file", "./scenes/empty.scene", "file for constructing the scene")
 	)
 
 	flag.Parse()

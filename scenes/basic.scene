@@ -1,0 +1,55 @@
+background #194D4D
+
+ambient 0.1,0.1,0.1
+
+camera 10,15,10
+
+light {
+    pos 0,30,-10
+    diffuse 0.8,0.8,0.8
+    specular 0.8,0.8,0.8
+}
+
+light {
+    pos 30,30,-10
+    diffuse 0.1,0.1,0.1
+    specular 0.8,0.8,0.8
+}
+
+sphere {
+    radius 25
+    center 0,0,25
+    material glass
+}
+
+sphere {
+    radius 10
+    center 70,-40,10
+    material red
+}
+
+sphere {
+    radius 10
+    center -70,-40,10
+    material red
+}
+
+sphere {
+    radius 10
+    center 0,-40,10
+    material ivory
+}
+
+triangle {
+    v0 -100,0,0
+    v1 -20,75,50
+    v2 50,0,100
+    material red
+}
+
+plane {
+    width 250
+    point 0,-50,75
+    normal 0,1,0
+    material glass
+}

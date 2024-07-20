@@ -7,7 +7,7 @@ import (
 )
 
 func TestNewParser(t *testing.T) {
-	str, err := os.ReadFile("../scenes/test_scene")
+	str, err := os.ReadFile("../scenes/test.scene")
 	if err != nil {
 		t.Fatal(err)
 	}
