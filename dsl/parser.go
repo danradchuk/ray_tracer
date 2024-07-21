@@ -30,6 +30,7 @@ func NewParser(content string) *Parser {
 func (p *Parser) nextToken() {
 	if p.peekPos >= len(p.Words) {
 		p.currToken = "EOF"
+		return
 	} else {
 		p.currToken = p.peekToken
 	}
