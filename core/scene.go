@@ -2,6 +2,10 @@ package core
 
 import (
 	"fmt"
+	"image"
+	"image/color"
+	palette2 "image/color/palette"
+	"image/gif"
 	"math"
 	"os"
 	"runtime"
@@ -23,13 +27,6 @@ type Camera struct {
 	FocalLength float64
 }
 
-type ImagePlane struct {
-	X1 geometry.Vec3
-	X2 geometry.Vec3
-	X3 geometry.Vec3
-	X4 geometry.Vec3
-}
-
 type Light struct {
 	Pos               geometry.Vec3
 	DiffuseIntensity  shading.Color
@@ -45,7 +42,58 @@ type Scene struct {
 	AccelBVH         *geometry.BVHNode
 }
 
-func (s *Scene) CreatePPM(width, height int, fov int, outputFile string) error {
+func (s *Scene) RenderGIF(width, height, fov int, output string) error {
+	cameraPosRotation := func(theta, y float64) geometry.Vec3 {
+		r := 10.
+		x := r * math.Cos(theta)
+		z := r * math.Sin(theta)
+		return geometry.Vec3{X: x, Y: y, Z: z}
+	}
+
+	var images []*image.Paletted
+	var delays []int
+
+	for i := 0; i < 360; i++ {
+		img := image.NewPaletted(image.Rect(0, 0, width, height), palette2.Plan9)
+
+		theta := float64(i) * (2 * math.Pi / 360) // Convert degrees to radians
+
+		for y := 0; y < height; y++ {
+			for x := 0; x < width; x++ {
+				r := geometry.NewPrimaryRay(cameraPosRotation(theta, s.Camera.Y),
+					float64(width),
+					float64(height),
+					float64(x),
+					float64(y),
+					float64(fov),
+				)
+				c := s.castRay(r, 0).ToImageColor()
+				img.Set(x, y, color.RGBA{R: c.R, G: c.G, B: c.B, A: 0xFF})
+			}
+		}
+
+		images = append(images, img)
+		delays = append(delays, 0)
+	}
+
+	outFile, err := os.Create(output)
+	if err != nil {
+		return err
+	}
+	defer outFile.Close()
+
+	err = gif.EncodeAll(outFile, &gif.GIF{
+		Image: images,
+		Delay: delays,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Scene) RenderPPM(width, height int, fov int, outputFile string) error {
 	// create an image file
 	f, err := os.Create(outputFile)
 	if err != nil {
@@ -68,7 +116,7 @@ func (s *Scene) CreatePPM(width, height int, fov int, outputFile string) error {
 
 		for y := startY; y < endY; y++ {
 			for x := 0; x < width; x++ {
-				r := geometry.NewPrimaryRay(s.Camera, float64(width), float64(height), float64(x), float64(y), fov)
+				r := geometry.NewPrimaryRay(s.Camera, float64(width), float64(height), float64(x), float64(y), float64(fov))
 				color := s.castRay(r, 0).ToImageColor()
 				frameBuffer[x][y] = color
 			}

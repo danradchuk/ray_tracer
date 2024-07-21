@@ -10,7 +10,7 @@ type Ray struct {
 
 // NewPrimaryRay creates a primary (camera) ray from the camera for a given screen position (x, y)
 // with the specified field of view (fov).
-func NewPrimaryRay(eye Vec3, width, height float64, x, y float64, fov int) Ray {
+func NewPrimaryRay(eye Vec3, width, height float64, x, y float64, fov float64) Ray {
 	aspectRatio := width / height
 	fovRad := (float64(fov) * math.Pi) / 180
 	angle := math.Tan(fovRad * 0.5)
