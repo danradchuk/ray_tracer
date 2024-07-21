@@ -25,8 +25,8 @@ func main() {
 		fov     = flag.Int("fov", 90, "field of view")
 		input   = flag.String("input", "teapot.obj", "a mesh of an object to render")
 		output  = flag.String("output", "image", "image to render")
-		imgType = flag.String("type", "gif", "ppm or gif")
-		world   = flag.String("scene-file", "./scenes/empty.scene", "file for constructing the scene")
+		imgType = flag.String("type", "ppm", "ppm or gif")
+		world   = flag.String("scene", "./scenes/empty.scene", "file for constructing the scene")
 	)
 
 	flag.Parse()
@@ -96,6 +96,6 @@ func main() {
 			log.Fatal(err)
 		}
 	} else {
-		log.Fatal("Unknown image type")
+		log.Fatal("unknown image type")
 	}
 }

@@ -40,7 +40,7 @@ Run the ray tracer with default flags:
 
 A scene file consists of the following elements:
 
-- `background`: Color in `hex`
+- `background`: Color in *hex* format
 - `ambient`: Vec3
 - `light`: Color, diffuse, and specular coefficients
 - `camera`: Vec3
